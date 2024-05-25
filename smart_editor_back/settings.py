@@ -86,8 +86,8 @@ DATABASES = {
         "NAME": "editor",
         "USER": "root",
         "PASSWORD": "Buaa@1234",
-        "HOST": "172.17.0.12",
-        "PORT": 3306,
+        "HOST": "sh-cynosdbmysql-grp-j09l6n2w.sql.tencentcdb.com",
+        "PORT": 23536,
     }
 }
 
