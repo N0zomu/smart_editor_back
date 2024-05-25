@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/doc/__pycache__" />
+      <excludeFolder url="file://$MODULE_DIR$/doc/migrations/__pycache__" />
+      <excludeFolder url="file://$MODULE_DIR$/message/__pycache__" />
+      <excludeFolder url="file://$MODULE_DIR$/message/migrations/__pycache__" />
+      <excludeFolder url="file://$MODULE_DIR$/smart_editor_back/__pycache__" />
+      <excludeFolder url="file://$MODULE_DIR$/team/__pycache__" />
+      <excludeFolder url="file://$MODULE_DIR$/team/migrations/__pycache__" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/__pycache__" />
+      <excludeFolder url="file://$MODULE_DIR$/user/__pycache__" />
+      <excludeFolder url="file://$MODULE_DIR$/user/migrations/__pycache__" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="format" value="PLAIN" />
+    <option name="myDocStringFormat" value="Plain" />
+  </component>
+</module>
