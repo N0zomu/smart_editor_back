@@ -31,7 +31,7 @@ def register(request):
         except ValidationError:
             return JsonResponse({
                 'code': 0,
-                'message': '不合法的邮箱！'
+                'error': '不合法的邮箱！'
             })
         try:
             old_user = User.objects.get(email=email)
@@ -44,7 +44,7 @@ def register(request):
                 return JsonResponse(
                     {
                         'code': 0,
-                        'message': 'Unexpected Error'
+                        'error': 'Unexpected Error'
                     }
                 )
             return JsonResponse({
@@ -78,7 +78,7 @@ def login(request):
             return JsonResponse(
                 {
                     'code': 0,
-                    'message': '用户未注册！'
+                    'error': '用户未注册！'
                 }
             )
         if hash_value != user.password:
