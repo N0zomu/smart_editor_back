@@ -89,6 +89,14 @@ DATABASES = {
         "HOST": "sh-cynosdbmysql-grp-j09l6n2w.sql.tencentcdb.com",
         "PORT": 23536,
     }
+    # 'default': {
+    #         "ENGINE": "django.db.backends.mysql",
+    #         "NAME": "editor_local",
+    #         "USER": "root",
+    #         "PASSWORD": "Buaa1234",
+    #         "HOST": "localhost",
+    #         "PORT": 3306,
+    # }
 }
 
 
