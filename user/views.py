@@ -109,9 +109,11 @@ def self_info(request):
     if request.method == 'GET':
         return JsonResponse({
             'code': 1,
-            'user_id': request.myuser.id,
-            'nickname': request.myuser.nickname,
+            'id': request.myuser.id,
             'email': request.myuser.email,
+            'nickname': request.myuser.nickname,
+            'icon': request.myuser.icon_url,
+            'is_VIP': request.myuser.isVIP
         })
 
 @csrf_exempt
@@ -203,10 +205,11 @@ def user_info(request):
 
         return JsonResponse({
             'code': 1,
-            'user_id': user.id,
-            'nickname': user.nickname,
+            'id': user.id,
             'email': user.email,
-            'icon_url': user.icon_url
+            'nickname': user.nickname,
+            'icon': user.icon_url,
+            'is_VIP': user.isVIP,
         })
 
 
@@ -229,10 +232,11 @@ def user_email_search(request):
 
         return JsonResponse({
             'code': 1,
-            'user_id': user.id,
-            'nickname': user.nickname,
+            'id': user.id,
             'email': user.email,
-            'icon_url': user.icon_url
+            'nickname': user.nickname,
+            'icon': user.icon_url,
+            'is_VIP': user.isVIP
         })
 
 @csrf_exempt
@@ -246,10 +250,11 @@ def user_name_search(request):
         users = User.objects.filter(nickname__contains=key)
 
         res = [{
-            'user_id': user.id,
-            'nickname': user.nickname,
+            'id': user.id,
             'email': user.email,
-            'icon_url': user.icon_url
+            'nickname': user.nickname,
+            'icon': user.icon_url,
+            'is_VIP': user.isVIP,
         } for user in users]
 
         return JsonResponse({
