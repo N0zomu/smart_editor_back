@@ -97,6 +97,8 @@ def login(request):
                 'id': user.id,
                 'email': user.email,
                 'nickname': user.nickname,
+                'icon': user.icon.url,
+                'is_VIP': user.isVIP,
                 'token': token
             }
         )
