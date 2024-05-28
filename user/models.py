@@ -10,5 +10,11 @@ class User(models.Model):  # 用户表
     icon = models.FileField(upload_to='icon', default='')
     isVIP = models.BooleanField(default=False)
 
+    @property
+    def icon_url(self):
+        if self.icon and hasattr(self.icon, 'url'):
+            return self.icon.url
+        else:
+            return ""
     class Meta:
         db_table = 'users'
