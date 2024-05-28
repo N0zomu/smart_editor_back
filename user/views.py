@@ -97,7 +97,7 @@ def login(request):
                 'id': user.id,
                 'email': user.email,
                 'nickname': user.nickname,
-                'icon': user.icon.url,
+                'icon': user.icon_url,
                 'is_VIP': user.isVIP,
                 'token': token
             }
@@ -172,15 +172,15 @@ def change_icon(request):
 def get_icon(request):
     if request.method == 'GET':
 
-        if not request.myuser.icon:
-            return JsonResponse({
-                'code': 0,
-                'error': '用户未上传头像！'
-            })
-        print(request.myuser.icon.url)
+        # if not request.myuser.icon:
+        #     return JsonResponse({
+        #         'code': 0,
+        #         'error': '用户未上传头像！'
+        #     })
+        # print(request.myuser.icon.url)
         return JsonResponse({
             'code': 1,
-            'icon_url': request.myuser.icon.url,
+            'icon_url': request.myuser.icon_url,
             'msg': '返回头像成功！'
         })
 
@@ -206,7 +206,7 @@ def user_info(request):
             'user_id': user.id,
             'nickname': user.nickname,
             'email': user.email,
-            'icon_url': user.icon.url
+            'icon_url': user.icon_url
         })
 
 
@@ -232,7 +232,7 @@ def user_email_search(request):
             'user_id': user.id,
             'nickname': user.nickname,
             'email': user.email,
-            'icon_url': user.icon.url
+            'icon_url': user.icon_url
         })
 
 @csrf_exempt
@@ -249,7 +249,7 @@ def user_name_search(request):
             'user_id': user.id,
             'nickname': user.nickname,
             'email': user.email,
-            'icon_url': user.icon.url
+            'icon_url': user.icon_url
         } for user in users]
 
         return JsonResponse({
