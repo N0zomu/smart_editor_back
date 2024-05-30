@@ -10,5 +10,6 @@ urlpatterns = [
     path('info/<int:team_id>', views.team_info),
     path('delete', views.delete_team),
     path('regain', views.regain_team),
+    path('search', views.search_team),
 
 ]
