@@ -19,7 +19,7 @@ def create_team(request):
         data = json.loads(json_str)
         team_name = data.get('team_name')
 
-        team = Team.objects.create(teamName = team_name)
+        team = Team.objects.create(teamName = team_name, creator=request.myuser.id)
         team.save()
 
         team_id = team.team_id
@@ -38,11 +38,17 @@ def create_team(request):
 @logging_check
 def all_team(request):
     if request.method == 'GET':
-        teams = [{
-            'team_id': x.team_id,
-            'team_name': Team.objects.get(team_id=x.team_id).teamName,
-            'perm': x.perm
-        } for x in Teammate.objects.order_by('perm').filter(user_id=request.myuser.id)]
+        teams = []
+        for x in Teammate.objects.order_by('perm').filter(user_id=request.myuser.id):
+            team = Team.objects.get(team_id=x.team_id, is_delete=False)
+            teams.append({
+                'team_id': team.team_id,
+                'team_name': team.teamName,
+                'creator': request.myuser.nickname if x.perm else User.objects.get(id=team.creator).nickname,
+                'created_time': team.created_time,
+                'updated_time': team.updated_time,
+                'perm': x.perm
+            })
         return JsonResponse(
             {
                 'code': 1,
@@ -284,6 +290,30 @@ def team_info(request, team_id):
             'message': "返回成功！",
             'team_id': team.team_id,
             'team_name': team.teamName,
+            'creator': User.objects.get(id=team.creator).nickname,
             'created_time': team.created_time,
             'update_time': team.updated_time
+        })
+
+@logging_check
+def search_team(request):
+    if request.method == 'POST':
+        json_str = request.body
+        data = json.loads(json_str)
+        key = data.get('key')
+
+        teams = Team.objects.filter(teamName__contains=key, is_delete=False)
+
+        res = [{
+            'team_id': team.team_id,
+            'team_name': team.teamName,
+            'creator': User.objects.get(id=team.creator).nickname,
+            'created_time': team.created_time,
+            'updated_time': team.updated_time,
+        } for team in teams]
+
+        return JsonResponse({
+            'code': 1,
+            'users': res,
+            'count': len(res)
         })

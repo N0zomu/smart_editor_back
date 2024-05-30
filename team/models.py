@@ -8,6 +8,7 @@ class Team(models.Model):  # 团队表
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
     is_delete = models.BooleanField(default=False)
+    creator = models.IntegerField()
 
     class Meta:
         db_table = 'team'
