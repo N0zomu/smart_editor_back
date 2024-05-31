@@ -39,7 +39,7 @@ def create_team(request):
 def all_team(request):
     if request.method == 'GET':
         teams = []
-        for x in Teammate.objects.order_by('perm').filter(user_id=request.myuser.id, is_delete=False):
+        for x in Teammate.objects.order_by('perm').filter(user_id=request.myuser.id):
             team = Team.objects.get(team_id=x.team_id)
             teams.append({
                 'team_id': team.team_id,
@@ -160,14 +160,15 @@ def delete_team(request):
                     'error': '不存在该团队！'
                 }
             )
-        t.is_delete = True
-        t.save()
+        # t.is_delete = True
+        # t.save()
+        t.delete()
 
-        ##################### delete? #########################
-        # old_relation = Teammate.objects.filter(team_id=team_id)
-        #
-        # for r in old_relation:
-        #     r.delete()
+        #################### delete? #########################
+        old_relation = Teammate.objects.filter(team_id=team_id)
+
+        for r in old_relation:
+            r.delete()
 
         return JsonResponse(
             {
