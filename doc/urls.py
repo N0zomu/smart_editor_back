@@ -12,4 +12,8 @@ urlpatterns = [
     path('move', views.move_doc),
     path('teamDelete', views.team_doc_delete),
     path('teamRegain', views.team_doc_regain),
+    path('collect',views.add_collect),
+    path('removeCollect', views.remove_collect),
+    path('updateTime', views.update_time),
+    path('allCollection', views.get_collection),
 ]

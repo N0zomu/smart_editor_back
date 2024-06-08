@@ -26,3 +26,9 @@ class Document(models.Model):
 
     class Meta:
         db_table = 'Document'
+
+class Collection(models.Model):  # 团队成员表
+    user = models.IntegerField(default=0)
+    doc = models.IntegerField(default=0)
+    class Meta:
+        db_table = 'Collection'
