@@ -168,7 +168,6 @@ def root_doc(request):
                         "created_time": c.created_time,
                         "update_time": c.update_time,
                         "is_folder": c.is_folder,
-                        "is_collect": c.is_collect,
                         })
 
         return JsonResponse({
