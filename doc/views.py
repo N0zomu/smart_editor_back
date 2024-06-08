@@ -1,10 +1,14 @@
-from django.shortcuts import render
 import json
+
 from django.http import JsonResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from doc.models import Doc, Document
+
+from doc.models import Doc, Document, Collection
 from team.models import Teammate
 from tools.logging_dec import logging_check
+from user.models import User
+
 
 # Create your views here.
 @logging_check
@@ -55,7 +59,7 @@ def create_doc(request):
                 'result': {
                     'doc_id': doc.doc_id,
                     'doc_name': doc.doc_name,
-                    'doc_creator': doc.doc_creator,
+                    'doc_creator': request.myuser.nickname,
                     'is_in_team': doc.is_in_team,
                     'team_id': doc.team_id,
                     "created_time": doc.created_time
@@ -160,10 +164,11 @@ def root_doc(request):
         for c in docs:
             res.append({"doc_id": c.doc_id,
                         "doc_name": c.doc_name,
-                        "doc_creator": c.doc_creator,
+                        "doc_creator": request.myuser.nickname,
                         "created_time": c.created_time,
                         "update_time": c.update_time,
                         "is_folder": c.is_folder,
+                        "is_collect": c.is_collect,
                         })
 
         return JsonResponse({
@@ -196,7 +201,7 @@ def team_root_doc(request):
         for c in docs:
             res.append({"doc_id": c.doc_id,
                         "doc_name": c.doc_name,
-                        "doc_creator": c.doc_creator,
+                        "doc_creator": User.objects.get(id=c.doc_creator).nickname,
                         "created_time": c.created_time,
                         "update_time": c.update_time,
                         "is_folder": c.is_folder,
@@ -235,7 +240,7 @@ def folder_doc(request):
         for c in docs:
             res.append({"doc_id": c.doc_id,
                         "doc_name": c.doc_name,
-                        "doc_creator": c.doc_creator,
+                        "doc_creator": User.objects.get(id=c.doc_creator).nickname,
                         "created_time": c.created_time,
                         "update_time": c.update_time,
                         "is_folder": c.is_folder,
@@ -349,4 +354,119 @@ def team_doc_regain(request):
         return JsonResponse({
             'code': 1,
             'message': '恢复成功！'
+        })
+
+@logging_check
+def add_collect(request):
+    if request.method == 'POST':
+
+        json_str = request.body
+        data = json.loads(json_str)
+        doc_id = data.get('doc_id')
+
+        try:
+            doc = Doc.objects.get(doc_id=doc_id)
+        except Exception as e:
+            return JsonResponse(
+                {
+                    'code': 0,
+                    'error': '对应文档不存在！'
+                }
+            )
+
+        try:
+            c = Collection.objects.get(user=request.myuser.id, doc=doc_id)
+            return JsonResponse(
+                {
+                    'code': 0,
+                    'error': '已收藏！'
+                }
+            )
+        except Exception as e:
+            print(e)
+            collection = Collection(user=request.myuser.id, doc=doc_id)
+            collection.save()
+
+            return JsonResponse({
+                'code': 1,
+                'message': '收藏成功！'
+            })
+
+@logging_check
+def remove_collect(request):
+    if request.method == 'POST':
+
+        json_str = request.body
+        data = json.loads(json_str)
+        doc_id = data.get('doc_id')
+        print(request.myuser.id, doc_id)
+        try:
+            c = Collection.objects.get(user=request.myuser.id, doc=doc_id)
+        except Exception as e:
+            print(e)
+            return JsonResponse(
+                {
+                    'code': 0,
+                    'error': '未收藏！'
+                }
+            )
+
+        c.delete()
+
+        return JsonResponse({
+            'code': 1,
+            'message': '取消收藏成功！'
+        })
+
+@logging_check
+def get_collection(request):
+    if request.method == 'GET':
+        collections = Collection.objects.filter(user=request.myuser.id)
+
+        res = []
+        id_group = []
+        for c in collections:
+            id_group.append(c.doc)
+            doc = Doc.objects.get(doc_id=c.doc)
+            res.append({
+                'doc_id': doc.doc_id,
+                'doc_name': doc.doc_name,
+                "doc_creator": User.objects.get(id=c.user).nickname,
+                'is_in_team': doc.is_in_team,
+                'team_id': doc.team_id,
+                "created_time": doc.created_time,
+                "update_time": doc.update_time,
+            })
+
+        return JsonResponse({
+            'code': 1,
+            'res': res,
+            'id_group': id_group,
+            'count': len(res)
+        })
+
+@logging_check
+def update_time(request):
+    if request.method == 'POST':
+
+        json_str = request.body
+        data = json.loads(json_str)
+        doc_id = data.get('doc_id')
+
+        try:
+            doc = Doc.objects.get(doc_id=doc_id)
+        except Exception as e:
+            return JsonResponse(
+                {
+                    'code': 0,
+                    'error': '对应文档不存在！'
+                }
+            )
+        doc.update_time = timezone.now()
+        doc.save()
+
+        return JsonResponse({
+            'code': 1,
+            'message': '更新成功！',
+            'update_time': doc.update_time
         })
