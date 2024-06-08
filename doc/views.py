@@ -159,8 +159,11 @@ def root_doc(request):
     if request.method == 'GET':
 
         docs = Doc.objects.filter(doc_creator=request.myuser.id, parent=None, is_delete=False, team_id=0)
-
+        collections = Collection.objects.filter(user=request.myuser.id)
         res = []
+        id_group = []
+        for c in collections:
+            id_group.append(c.doc)
         for c in docs:
             res.append({"doc_id": c.doc_id,
                         "doc_name": c.doc_name,
@@ -168,6 +171,7 @@ def root_doc(request):
                         "created_time": c.created_time,
                         "update_time": c.update_time,
                         "is_folder": c.is_folder,
+                        "is_collect": c.doc_id in id_group,
                         })
 
         return JsonResponse({
@@ -196,7 +200,11 @@ def team_root_doc(request):
 
         docs = Doc.objects.filter(parent_id=None, is_delete=False, team_id=team_id)
 
+        collections = Collection.objects.filter(user=request.myuser.id)
         res = []
+        id_group = []
+        for c in collections:
+            id_group.append(c.doc)
         for c in docs:
             res.append({"doc_id": c.doc_id,
                         "doc_name": c.doc_name,
@@ -204,6 +212,7 @@ def team_root_doc(request):
                         "created_time": c.created_time,
                         "update_time": c.update_time,
                         "is_folder": c.is_folder,
+                        "is_collect": c.doc_id in id_group,
                         })
 
         return JsonResponse({
