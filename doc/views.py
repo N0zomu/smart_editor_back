@@ -91,10 +91,10 @@ def delete_doc(request):
         doc.is_delete = True
         doc.save()
 
-        if is_folder:
-            for c in doc.get_descendants(include_self=False):
-                c.is_delete = True
-                c.save()
+        # if is_folder:
+        #     for c in doc.get_descendants(include_self=False):
+        #         c.is_delete = True
+        #         c.save()
         return JsonResponse({
             'code': 1,
             'message': '删除成功！'
@@ -119,10 +119,19 @@ def regain_doc(request):
         doc.is_delete = False
         doc.save()
 
-        if is_folder:
-            for c in doc.get_descendants(include_self=False):
-                c.is_delete = False
-                c.save()
+        for c in doc.get_ancestors(include_self=False):
+            if c.is_delete:
+                doc.parent = None
+                doc.save()
+                return JsonResponse({
+                    'code': 1,
+                    'message': '无法恢复到原路径，已恢复到桌面'
+                })
+
+        # if is_folder:
+        #     for c in doc.get_descendants(include_self=False):
+        #         c.is_delete = False
+        #         c.save()
         return JsonResponse({
             'code': 1,
             'message': '恢复成功！'
@@ -244,7 +253,11 @@ def folder_doc(request):
 
         docs = Doc.objects.filter(parent_id=doc_id, is_delete=False)
 
+        collections = Collection.objects.filter(user=request.myuser.id)
         res = []
+        id_group = []
+        for c in collections:
+            id_group.append(c.doc)
         for c in docs:
             res.append({"doc_id": c.doc_id,
                         "doc_name": c.doc_name,
@@ -252,6 +265,7 @@ def folder_doc(request):
                         "created_time": c.created_time,
                         "update_time": c.update_time,
                         "is_folder": c.is_folder,
+                        "is_collect": c.doc_id in id_group,
                         })
 
         return JsonResponse({
