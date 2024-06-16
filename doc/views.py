@@ -51,8 +51,9 @@ def create_doc(request):
             old_doc = Doc.objects.get(doc_name=doc_name, team_id=doc.team_id, is_delete=False, is_folder=is_folder, parent=parent_doc)
         except Exception as e:
             doc.save()
-            document = Document(doc_id=doc.doc_id)
-            document.save()
+            if not is_folder:
+                document = Document(doc_id=doc.doc_id)
+                document.save()
             return JsonResponse({
                 'code': 1,
                 'message': '创建文档成功!',
@@ -153,7 +154,7 @@ def get_path(request):
             })
 
         res = []
-        for c in doc.get_ancestors(include_self=False):
+        for c in doc.get_ancestors(include_self=True):
             res.append({"id": c.doc_id,
                         "name": c.doc_name})
 
