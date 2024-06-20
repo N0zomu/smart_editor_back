@@ -80,7 +80,6 @@ def delete_doc(request):
         doc_id = data.get('doc_id')
         is_folder = data.get('is_folder')
 
-        print(doc_id, is_folder)
         try:
             doc = Doc.objects.get(doc_id=doc_id, is_delete=False, is_folder=is_folder)
         except Exception as e:
@@ -272,6 +271,8 @@ def folder_doc(request):
         return JsonResponse({
             'code': 1,
             'res': res,
+            'is_team': doc.is_in_team,
+            "team_id": doc.team_id,
             'count': len(res)
         })
 
@@ -304,6 +305,14 @@ def move_doc(request):
             src.parent = None
             src.save()
 
+        docs = Doc.objects.filter(parent_id=src.parent, is_delete=False)
+        for d in docs:
+            if src.doc_name==d.doc_name:
+                return JsonResponse({
+                    'code': 0,
+                    'message': '目标文件夹中存在同名文件！'
+                })
+
         return JsonResponse({
             'code': 1,
             'message': '移动成功！'
@@ -328,15 +337,10 @@ def team_doc_delete(request):
                 }
             )
 
-        docs = Doc.objects.filter(parent_id=None, is_delete=False, team_id=team_id)
+        docs = Doc.objects.filter(team_id=team_id)
 
         for c in docs:
-            c.is_delete = True
-            c.save()
-            if c.is_folder:
-                for d in c.get_descendants(include_self=False):
-                    d.is_delete = True
-                    d.save()
+            c.delete()
 
 
         return JsonResponse({
