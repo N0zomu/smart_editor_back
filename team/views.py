@@ -254,7 +254,7 @@ def see_members(request):
                 'perm': x.perm,
                 'nickname': user.nickname,
                 'email': user.email,
-                'icon': user.icon.url
+                'icon': user.icon_url
             })
 
         return JsonResponse({
