@@ -2,6 +2,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views import View
 import json
 import hashlib
+
+from message.models import Message
+from team.models import Teammate
 from user.models import User
 from django.http import JsonResponse
 import jwt
@@ -122,7 +125,7 @@ def change_nickname(request):
     if request.method == 'POST':
         json_str = request.body
         data = json.loads(json_str)
-        nickname = data.get('nickname')
+        nickname = data.get('newNick')
 
         request.myuser.nickname = nickname
         request.myuser.save()
@@ -138,10 +141,18 @@ def change_password(request):
     if request.method == 'POST':
         json_str = request.body
         data = json.loads(json_str)
-        old_password = data.get('old_password')
+        old_password = data.get('oldPWD')
         old_hash_value = hashlib.sha256(old_password.encode('utf-8')).hexdigest()
-        new_password = data.get('new_password')
+        new_password = data.get('newPWD')
         new_hash_value = hashlib.sha256(new_password.encode('utf-8')).hexdigest()
+        c_password = data.get('cPWD')
+
+        if new_password != c_password:
+            return JsonResponse({
+                'code': 0,
+                'error': '确认密码与新密码不一致！'
+            })
+
         user = User.objects.get(id = request.myuser.id)
         if user.password != old_hash_value:
             return JsonResponse({
@@ -220,6 +231,8 @@ def user_email_search(request):
         json_str = request.body
         data = json.loads(json_str)
         user_email = data.get('email')
+        team_id = data.get('team_id')
+        has_in_team = False
 
         try:
             user = User.objects.get(email=user_email)
@@ -229,14 +242,32 @@ def user_email_search(request):
                 'code': 0,
                 'error': '查询用户不存在！'
             })
-
+        for x in Teammate.objects.filter(user_id=user.id):
+            if x.team_id == team_id:
+                has_in_team = True
+                break
+        try:
+            msg = Message.objects.get(sender_id=request.myuser.id, receiver_id=user.id, ref_type="team", ref_id=team_id, status=0)
+        except Exception as e:
+            return JsonResponse({
+                'code': 1,
+                'id': user.id,
+                'email': user.email,
+                'nickname': user.nickname,
+                'icon': user.icon_url,
+                'is_VIP': user.isVIP,
+                'has_in_team': has_in_team,
+                'has_send': False,
+            })
         return JsonResponse({
             'code': 1,
             'id': user.id,
             'email': user.email,
             'nickname': user.nickname,
             'icon': user.icon_url,
-            'is_VIP': user.isVIP
+            'is_VIP': user.isVIP,
+            'has_in_team': has_in_team,
+            'has_send': True,
         })
 
 @csrf_exempt

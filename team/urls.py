@@ -11,5 +11,6 @@ urlpatterns = [
     path('delete', views.delete_team),
     path('regain', views.regain_team),
     path('search', views.search_team),
+    path('quitSelf', views.quit_team),
 
 ]
