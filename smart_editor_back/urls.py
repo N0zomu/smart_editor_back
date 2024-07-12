@@ -24,12 +24,12 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('doc/', include('doc.urls')),
-    path('user/', include('user.urls')),
-    path('team/', include('team.urls')),
-    path('msg/', include('message.urls')),
-    path('ai/', include('ai.urls')),
-    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT})
+    path('api/doc/', include('doc.urls')),
+    path('api/user/', include('user.urls')),
+    path('api/team/', include('team.urls')),
+    path('api/msg/', include('message.urls')),
+    path('api/ai/', include('ai.urls')),
+    re_path(r'^api/media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT})
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
