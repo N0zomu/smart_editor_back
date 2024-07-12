@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from doc.models import Doc, Document, Collection
-from team.models import Teammate
+from team.models import Teammate, Team
 from tools.logging_dec import logging_check
 from user.models import User
 
@@ -71,7 +71,7 @@ def create_doc(request):
             'message': '存在同名文件'
         })
 
-
+@logging_check
 @csrf_exempt
 def delete_doc(request):
     if request.method == 'POST':
@@ -100,6 +100,7 @@ def delete_doc(request):
             'message': '删除成功！'
         })
 
+@logging_check
 @csrf_exempt
 def regain_doc(request):
     if request.method == 'POST':
@@ -135,6 +136,29 @@ def regain_doc(request):
         return JsonResponse({
             'code': 1,
             'message': '恢复成功！'
+        })
+
+@logging_check
+@csrf_exempt
+def delete_c_doc(request):
+    if request.method == 'POST':
+        json_str = request.body
+        data = json.loads(json_str)
+        doc_id = data.get('doc_id')
+
+        try:
+            doc = Doc.objects.get(doc_id=doc_id, is_delete=True)
+        except Exception as e:
+            return JsonResponse({
+                'code': 0,
+                'message': '该文件不存在！'
+            })
+
+        doc.delete()
+
+        return JsonResponse({
+            'code': 1,
+            'message': '彻底删除成功！'
         })
 
 @csrf_exempt
@@ -239,7 +263,7 @@ def folder_doc(request):
         doc_id = data.get('doc_id')
 
         try:
-            doc = Doc.objects.get(doc_id=doc_id, is_delete=False, doc_creator=request.myuser.id)
+            doc = Doc.objects.get(doc_id=doc_id, is_delete=False)
         except Exception as e:
             return JsonResponse({
                 'code': 0,
@@ -426,7 +450,6 @@ def remove_collect(request):
         json_str = request.body
         data = json.loads(json_str)
         doc_id = data.get('doc_id')
-        print(request.myuser.id, doc_id)
         try:
             c = Collection.objects.get(user=request.myuser.id, doc=doc_id)
         except Exception as e:
@@ -453,17 +476,19 @@ def get_collection(request):
         res = []
         id_group = []
         for c in collections:
-            id_group.append(c.doc)
             doc = Doc.objects.get(doc_id=c.doc)
-            res.append({
-                'doc_id': doc.doc_id,
-                'doc_name': doc.doc_name,
-                "doc_creator": User.objects.get(id=c.user).nickname,
-                'is_in_team': doc.is_in_team,
-                'team_id': doc.team_id,
-                "created_time": doc.created_time,
-                "update_time": doc.update_time,
-            })
+            if not doc.is_delete:
+                id_group.append(c.doc)
+                res.append({
+                    'doc_id': doc.doc_id,
+                    'doc_name': doc.doc_name,
+                    'is_folder': doc.is_folder,
+                    "doc_creator": User.objects.get(id=c.user).nickname,
+                    'is_in_team': doc.is_in_team,
+                    'team_id': doc.team_id,
+                    "created_time": doc.created_time,
+                    "update_time": doc.update_time,
+                })
 
         return JsonResponse({
             'code': 1,
@@ -473,7 +498,37 @@ def get_collection(request):
         })
 
 @logging_check
-def update_time(request):
+def update_doc(request):
+    if request.method == 'POST':
+
+        json_str = request.body
+        data = json.loads(json_str)
+        doc_id = data.get('doc_id')
+        content = data.get('content')
+
+        try:
+            doc = Doc.objects.get(doc_id=doc_id)
+            document = Document.objects.get(doc_id=doc_id)
+        except Exception as e:
+            return JsonResponse(
+                {
+                    'code': 0,
+                    'error': '对应文档不存在！'
+                }
+            )
+        document.content = content
+        document.save()
+        doc.update_doc = timezone.now()
+        doc.save()
+
+        return JsonResponse({
+            'code': 1,
+            'message': '更新成功！',
+            'update_time': doc.update_time
+        })
+
+@logging_check
+def doc_content(request):
     if request.method == 'POST':
 
         json_str = request.body
@@ -482,6 +537,7 @@ def update_time(request):
 
         try:
             doc = Doc.objects.get(doc_id=doc_id)
+            document = Document.objects.get(doc_id=doc_id)
         except Exception as e:
             return JsonResponse(
                 {
@@ -489,11 +545,185 @@ def update_time(request):
                     'error': '对应文档不存在！'
                 }
             )
-        doc.update_time = timezone.now()
-        doc.save()
+        if doc.is_in_team:
+            team = Team.objects.get(team_id=doc.team_id)
+            return JsonResponse({
+                'code': 1,
+                'message': '返回成功！',
+                'doc_name': doc.doc_name,
+                'content': document.content,
+                'update_time': doc.update_time,
+                'team_id': doc.team_id,
+                'team_name': team.teamName,
+            })
 
         return JsonResponse({
             'code': 1,
-            'message': '更新成功！',
-            'update_time': doc.update_time
+            'message': '返回成功！',
+            'doc_name': doc.doc_name,
+            'content': document.content,
+            'update_time': doc.update_time,
+            'team_id': doc.team_id,
+            'team_name': '',
+        })
+
+@logging_check
+def get_recent(request):
+    if request.method == 'GET':
+        docs = Doc.objects.filter(doc_creator=request.myuser.id, is_delete=False, is_folder=False).order_by('-update_time')
+
+        res = []
+        time_list = []
+        for doc in docs[:15]:
+            update_time = doc.update_time
+            time_label = [update_time.year, update_time.month, update_time.day]
+            if time_label not in time_list:
+                time_list.append(time_label)
+                res.append({
+                    'year': update_time.year,
+                    'month': update_time.month,
+                    'day': update_time.day,
+                    'docs':[
+                        {
+                            'doc_id': doc.doc_id,
+                            'doc_name': doc.doc_name,
+                            'is_folder': doc.is_folder,
+                            "doc_creator": request.myuser.nickname,
+                            'is_in_team': doc.is_in_team,
+                            'team_id': doc.team_id,
+                            "created_time": doc.created_time,
+                            "update_time": doc.update_time,
+                        }
+                    ]
+                })
+            else:
+                res[-1].get('docs').append({
+                    'doc_id': doc.doc_id,
+                    'doc_name': doc.doc_name,
+                    'is_folder': doc.is_folder,
+                    "doc_creator": request.myuser.nickname,
+                    'is_in_team': doc.is_in_team,
+                    'team_id': doc.team_id,
+                    "created_time": doc.created_time,
+                    "update_time": doc.update_time,
+                })
+
+        return JsonResponse({
+            'code': 1,
+            'res': res,
+        })
+
+
+@logging_check
+def get_delete(request):
+    if request.method == 'GET':
+        docs = Doc.objects.filter(doc_creator=request.myuser.id, is_delete=True).order_by('-update_time')
+
+        res = []
+        for doc in docs:
+            res.append({
+                'doc_id': doc.doc_id,
+                'doc_name': doc.doc_name,
+                'is_folder': doc.is_folder,
+                "doc_creator": request.myuser.nickname,
+                'is_in_team': doc.is_in_team,
+                'team_id': doc.team_id,
+                "created_time": doc.created_time,
+                "update_time": doc.update_time,
+            })
+
+        return JsonResponse({
+            'code': 1,
+            'res': res,
+        })
+
+@logging_check
+def delete_all(request):
+    if request.method == 'GET':
+        docs = Doc.objects.filter(doc_creator=request.myuser.id, is_delete=True)
+
+        for doc in docs:
+            doc.delete()
+
+        return JsonResponse({
+            'code': 1,
+            'message': '删除全部文件成功！'
+        })
+
+@logging_check
+def get_folder_team(request):
+    if request.method == 'POST':
+
+        json_str = request.body
+        data = json.loads(json_str)
+        doc_id = data.get('doc_id')
+        try:
+            folder = Doc.objects.get(doc_id=doc_id)
+        except Exception as e:
+            print(e)
+            return JsonResponse(
+                {
+                    'code': 0,
+                    'error': '该文件不存在！'
+                }
+            )
+
+        return JsonResponse({
+            'code': 1,
+            'in_team': folder.is_in_team,
+            'team_id': folder.team_id
+        })
+
+@logging_check
+def search(request):
+    if request.method == 'POST':
+
+        json_str = request.body
+        data = json.loads(json_str)
+        key = data.get('key')
+
+        docs = Doc.objects.filter(doc_creator=request.myuser.id, doc_name__contains=key, is_delete=False, is_folder=False)
+        doc_res = [{
+            'doc_id': doc.doc_id,
+            'doc_name': doc.doc_name,
+            'is_folder': doc.is_folder,
+            "doc_creator": request.myuser.nickname,
+            'is_in_team': doc.is_in_team,
+            'team_id': doc.team_id,
+            "created_time": doc.created_time,
+            "update_time": doc.update_time,
+        } for doc in docs]
+
+        folders = Doc.objects.filter(doc_creator=request.myuser.id, doc_name__contains=key, is_delete=False,
+                                  is_folder=True)
+        folder_res = [{
+            'doc_id': doc.doc_id,
+            'doc_name': doc.doc_name,
+            'is_folder': doc.is_folder,
+            "doc_creator": request.myuser.nickname,
+            'is_in_team': doc.is_in_team,
+            'team_id': doc.team_id,
+            "created_time": doc.created_time,
+            "update_time": doc.update_time,
+        } for doc in folders]
+
+        team_res = []
+        for x in Teammate.objects.order_by('perm').filter(user_id=request.myuser.id):
+            team = Team.objects.get(team_id=x.team_id)
+            if key in team.teamName:
+                team_res.append({
+                    'team_id': team.team_id,
+                    'team_name': team.teamName,
+                    'creator_id': team.creator,
+                    'creator': request.myuser.nickname if x.perm else User.objects.get(id=team.creator).nickname,
+                    'created_time': team.created_time,
+                    'updated_time': team.updated_time,
+                    'perm': x.perm
+                })
+
+        return JsonResponse({
+            'code': 1,
+            'doc_res': doc_res,
+            'folder_res': folder_res,
+            'team_res': team_res
         })

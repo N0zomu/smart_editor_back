@@ -44,6 +44,7 @@ def all_team(request):
             teams.append({
                 'team_id': team.team_id,
                 'team_name': team.teamName,
+                'creator_id': team.creator,
                 'creator': request.myuser.nickname if x.perm else User.objects.get(id=team.creator).nickname,
                 'created_time': team.created_time,
                 'updated_time': team.updated_time,
@@ -303,18 +304,54 @@ def search_team(request):
         data = json.loads(json_str)
         key = data.get('key')
 
-        teams = Team.objects.filter(teamName__contains=key, is_delete=False)
+        # teams = Team.objects.filter(teamName__contains=key, is_delete=False)
+        #
+        # res = [{
+        #     'team_id': team.team_id,
+        #     'team_name': team.teamName,
+        #     'creator': User.objects.get(id=team.creator).nickname,
+        #     'created_time': team.created_time,
+        #     'updated_time': team.updated_time,
+        # } for team in teams]
 
-        res = [{
-            'team_id': team.team_id,
-            'team_name': team.teamName,
-            'creator': User.objects.get(id=team.creator).nickname,
-            'created_time': team.created_time,
-            'updated_time': team.updated_time,
-        } for team in teams]
+        res = []
+        for x in Teammate.objects.order_by('perm').filter(user_id=request.myuser.id):
+            team = Team.objects.get(team_id=x.team_id)
+            if key in team.teamName:
+                res.append({
+                    'team_id': team.team_id,
+                    'team_name': team.teamName,
+                    'creator_id': team.creator,
+                    'creator': request.myuser.nickname if x.perm else User.objects.get(id=team.creator).nickname,
+                    'created_time': team.created_time,
+                    'updated_time': team.updated_time,
+                    'perm': x.perm
+                })
 
         return JsonResponse({
             'code': 1,
             'users': res,
             'count': len(res)
+        })
+
+@logging_check
+def quit_team(request):
+    if request.method == 'POST':
+        json_str = request.body
+        data = json.loads(json_str)
+        team_id = data.get('team_id')
+        try:
+            tm = Teammate.objects.get(team_id=team_id, user_id=request.myuser.id)
+        except Exception as e:
+            print(e)
+            return JsonResponse({
+                'code': 0,
+                'error': '未加入该团队！'
+            })
+
+        tm.delete()
+
+        return JsonResponse({
+            'code': 1,
+            'message': "退出成功！",
         })

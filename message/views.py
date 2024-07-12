@@ -51,16 +51,6 @@ def create_message(request):
                         'error': '团队获取错误！'
                     }
                 )
-            try:
-                relation = Teammate.objects.get(user_id=rec_id, team_id=ref_id)
-            except Exception as e:
-                print(e)
-                return JsonResponse(
-                    {
-                        'code': 11004,
-                        'error': '接收者不在团队中！'
-                    }
-                )
         elif ref_type == 'doc':
             try:
                 team = Team.objects.get(team_id=team_id)
@@ -123,7 +113,8 @@ def all_messages(request):
                 'team_id': x.team_id,
                 'send_time': x.created_time,
                 'ref_type': x.ref_type,
-                'ref_id': x.ref_id
+                'ref_id': x.ref_id,
+                'ref_name': Team.objects.get(team_id=x.ref_id).teamName if x.ref_type=='team' else Doc.objects.get(doc_id=x.ref_id).doc_name
             } for x in all_msg]
 
         else:
@@ -140,6 +131,7 @@ def all_messages(request):
 
         return JsonResponse({
             'code': 200,
+            'status': status,
             'messages': messages,
             'count': all_msg.count()
         })
