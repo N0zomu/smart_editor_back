@@ -12,4 +12,5 @@ urlpatterns = [
     path('info', views.user_info),
     path('searchEmail', views.user_email_search),
     path('searchName', views.user_name_search),
+    path('upgrade', views.upgrade),
 ]

@@ -28,6 +28,8 @@ urlpatterns = [
     path('api/user/', include('user.urls')),
     path('api/team/', include('team.urls')),
     path('api/msg/', include('message.urls')),
+    path('api/file/', include('file.urls')),
+    path('api/mp/', include('mindmap.urls')),
     path('api/ai/', include('ai.urls')),
     re_path(r'^api/media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT})
 ]

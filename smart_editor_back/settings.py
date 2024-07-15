@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     'user',
     'team',
     'message',
+    'file',
+    'mindmap',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
