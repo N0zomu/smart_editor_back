@@ -180,6 +180,17 @@ def change_icon(request):
             'msg': '修改成功'
         })
 
+@logging_check
+def upgrade(request):
+    if request.method == 'POST':
+        request.myuser.isVIP = True
+        request.myuser.save()
+
+        return JsonResponse({
+            'code': 1,
+            'msg': '修改成功'
+        })
+
 @csrf_exempt
 @logging_check
 def get_icon(request):
